@@ -1,3 +1,5 @@
+// https://glitch.com/edit/#!/translucent-milkshake?path=server.js:71:8
+
 const express = require('express');
 // you'll need to use `queryString` in your `gateKeeper` middleware function
 const queryString = require('query-string');
@@ -63,12 +65,30 @@ const USERS = [
 //  3. looks for a user object matching the sent username and password values
 //  4. if matching user found, add the user object to the request object
 //     (aka, `req.user = matchedUser`)
-function gateKeeper(req, res, next) {
+const gateKeeper = (req, res, next) => {
   // your code should replace the line below
+
+  const{user, pass} = queryString.parse(req.get('x-username-and-password'));
+
+  for (let i = 0; i < USERS.length; i++){
+    // USERS.find(function(user, pass){
+      if (USERS[i].userName === user && USERS[i].password === pass){
+        const matchedUser = USERS[i];
+        req.user = matchedUser;
+        break;
+      }
+      else {
+        req.user = undefined;
+      }
+    // })
+  }
+
   next();
 }
 
 // Add the middleware to your app!
+app.use(gateKeeper);
+
 
 // this endpoint returns a json object representing the user making the request,
 // IF they supply valid user credentials. This endpoint assumes that `gateKeeper`
@@ -85,6 +105,6 @@ app.get("/api/users/me", (req, res) => {
   return res.json({firstName, lastName, id, userName, position});
 });
 
-app.listen(process.env.PORT, () => {
-  console.log(`Your app is listening on port ${process.env.PORT}`);
+app.listen(process.env.PORT || 8080, () => {
+  console.log(`Your app is listening on port ${process.env.PORT || 8080}`);
 });
